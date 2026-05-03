@@ -1,0 +1,6 @@
+python3 -m venv venv --> To setup the virtual environment
+venv\Scripts\activate --> To activate the environment
+pip install chromaDB --> Install vector Db
+pip install -U google-genai --> google Gemini
+
+Store the API_KEY within the User Variables within the environment variables of your system.
