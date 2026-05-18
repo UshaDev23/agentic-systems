@@ -110,7 +110,7 @@ def create_chunk(documents: List[Dict[str, Any]],
 
             source = chunk_metadata["source"]
             # unique_string = f"{source}_{idx}_{chunk}"
-            chunk_id = f"{source}_{idx}_{random.randint(1000, 9999)}"
+            chunk_id = f"{source}_{idx}"
             all_chunks.append({
                 "id": chunk_id,
                 "text": chunk,
@@ -124,7 +124,7 @@ def create_embeddings(text: List[str]) -> List[List[float]]:
         model = EMBEDDING_MODEL,
         contents = text
     )
-    embeddings = [item.embedding for item in response.data]
+    embeddings = [item.values for item in response.embeddings]
     return embeddings
 
 # 7. Setup Vector database
