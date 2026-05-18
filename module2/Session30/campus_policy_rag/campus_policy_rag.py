@@ -2,6 +2,9 @@ from google import genai
 import chromadb
 from pypdf import PdfReader
 import random
+from pathlib import Path
+from typing import List, Dict, Any
+import re
 
 # 1. Initialize GenAI client
 genai_client = genai.Client()
@@ -92,7 +95,7 @@ def load_docs_from_folder(folder_path: str) -> List[Dict[str, Any]]:
 
 def create_chunk(documents: List[Dict[str, Any]], 
                 chunk_size_words: int = 120,
-                overlap_words: int = 30) -> List[Dict[str, Any]]
+                overlap_words: int = 30) -> List[Dict[str, Any]]:
     all_chunks = []
     for doc in documents:
         text = doc["text"]
@@ -107,9 +110,9 @@ def create_chunk(documents: List[Dict[str, Any]],
 
             source = chunk_metadata["source"]
             # unique_string = f"{source}_{idx}_{chunk}"
-            chunk_id: random.randint(1000, 9999)
+            chunk_id = f"{source}_{idx}_{random.randint(1000, 9999)}"
             all_chunks.append({
-                "chunk_id": chunk_id,
+                "id": chunk_id,
                 "text": chunk,
                 "metadata": chunk_metadata
             })
@@ -213,32 +216,22 @@ def build_grounded_prompt(query: str, retrieved_chunks: List[Dict[str, Any]]) ->
         metadata = chunk["metadata"]
         source = metadata.get("source", "unknown")
         policy_type = metadata.get("policy_type", "general")
-        context_parts.append(f"Policy Document {idx} (
-        Source: {source},
-        Policy Type: {policy_type})
-        Content: {chunk['text']}")
+        context_parts.append(f"Policy Document {idx}\nSource: {source},\nPolicy Type: {policy_type}\nContent: {chunk['text']}")
 
-        context = "\n\n".join(context_parts)
+    context = "\n\n".join(context_parts)
     prompt = f"""
-     You are a helpful assistant for campus policy related queries.
-        Answer the user's question using only the policy context provided below.
-        Rules:
-        - If the answer is not found in the policy context, respond with "Sorry, I
-don't have that information."
-        - Do not provide any information that is not explicitly stated in the policy context.
-        Keep t You are a helpful assistant for campus policy related queries.
-        Answer the user's question using only the policy context provided below.
-        Rules:
-        - If the answer is not found in the policy context, respond with "Sorry, I
-don't have that information."
-        - Do not provide any information that is not explicitly stated in the policy context.
-        Keep the answer concise and to the point.
+    You are a helpful assistant for campus policy related queries.
+    Answer the user's question using only the policy context provided below.
+    Rules:
+    - If the answer is not found in the policy context, respond with "Sorry, I don't have that information."
+    - Do not provide any information that is not explicitly stated in the policy context.
+    - Keep the answer concise and to the point.
 
-        Policy Context:
-        {context}
+    Policy Context:
+    {context}
 
-        User's Question: {query}
-        """
+    User's Question: {query}
+    """
     return prompt
 
 # 12. Generate answer using LLM
@@ -258,7 +251,7 @@ def answer_question(collection, query: str, top_k:int = 4):
 def main():
     collection = setup_vector_database()
     folder_path = "./policy_documents"
-    build_knowldege_base(collection, folder_path)
+    build_knowledge_base(collection, folder_path)
     user_query = "Do I need to get my ID card for library access?"
     answer = answer_question(collection, user_query)
     print(f"User Query: {user_query}")
