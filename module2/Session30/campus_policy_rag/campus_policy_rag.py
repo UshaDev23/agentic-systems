@@ -255,4 +255,15 @@ def answer_question(collection, query: str, top_k:int = 4):
     retrieved_chunks = retrieve_relevant_chunks(collection, query, top_k)
     return generate_answer(query, retrieved_chunks)
 
+def main():
+    collection = setup_vector_database()
+    folder_path = "./policy_documents"
+    build_knowldege_base(collection, folder_path)
+    user_query = "Do I need to get my ID card for library access?"
+    answer = answer_question(collection, user_query)
+    print(f"User Query: {user_query}")
+    print(f"Answer: {answer}")
+
+if __name__ == "__main__":
+    main()
 
