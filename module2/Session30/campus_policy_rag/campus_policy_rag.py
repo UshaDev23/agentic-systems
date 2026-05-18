@@ -219,8 +219,14 @@ def build_grounded_prompt(query: str, retrieved_chunks: List[Dict[str, Any]]) ->
         Content: {chunk['text']}")
 
         context = "\n\n".join(context_parts)
-        prompt = f"""
-        You are a helpful assistant for campus policy related queries.
+    prompt = f"""
+     You are a helpful assistant for campus policy related queries.
+        Answer the user's question using only the policy context provided below.
+        Rules:
+        - If the answer is not found in the policy context, respond with "Sorry, I
+don't have that information."
+        - Do not provide any information that is not explicitly stated in the policy context.
+        Keep t You are a helpful assistant for campus policy related queries.
         Answer the user's question using only the policy context provided below.
         Rules:
         - If the answer is not found in the policy context, respond with "Sorry, I
@@ -234,3 +240,19 @@ don't have that information."
         User's Question: {query}
         """
     return prompt
+
+# 12. Generate answer using LLM
+def generate_answer(query: str, retrieved_chunks: List[Dict[str, Any]]) -> str:
+    prompt = build_grounded_prompt(query, retrieved_chunks)
+    response = genai_client.models.generate_content(
+        model = LLM_MODEL,
+        contents = prompt
+    )
+    return response.text
+
+# 13. Answer the user query using RAG
+def answer_question(collection, query: str, top_k:int = 4):
+    retrieved_chunks = retrieve_relevant_chunks(collection, query, top_k)
+    return generate_answer(query, retrieved_chunks)
+
+
